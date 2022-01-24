@@ -71,8 +71,8 @@ int main(int arg, char** argc){
 	int rd = recvfrom(sd, message, 1000, 0, (struct sockaddr*)&server_info, &sender_size);
 	message[rd] = '\0';	
 	if(rd && (strcmp("Yes", message) == 0))
-		printf("A file transfer can start.");
+		printf("A file transfer can start.\n");
 	else
-		printf("Did not receive (a yes).");	
+		printf("Did not receive (a yes).\n");	
 	return 0;
 }

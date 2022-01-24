@@ -75,10 +75,10 @@ int main(int arg, char** argc){
 	char temp[] = "ftp";
 	char reply[10];
 	if(!strcmp(buffer,temp)){
-		printf("Received.");
+		printf("Received.\n");
 		strcpy(reply,"Yes");
 	}else{
-		printf("Wrong");
+		printf("Wrong.\n");
 		strcpy(reply,"No");
 	}
 	if((numbytes = sendto(sockfd, reply,strlen(reply),0, (const struct sockaddr*) &their_addr, addr_len)) == -1){
