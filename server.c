@@ -20,6 +20,10 @@ int main(int arg, char** argc){
 		printf("Parameter numbers do not match.");
 		exit(1);
 	}
+	if(strcmp(argc[0], "server")){
+		printf("Incorrect format of invoking");
+		exit(1);
+	}
 	int sockfd; //new_fd;	//Listen socket, and process socket.
 	struct addrinfo hints;
 	struct addrinfo* serverinfo;
