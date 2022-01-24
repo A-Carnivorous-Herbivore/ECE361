@@ -21,7 +21,9 @@ int main(int arg, char** argc){
 		return 0;
 	}
 	struct in_addr server_add;
-	int err = inet_pton(AF_INET, argc[1], &server_add);
+	char temp1[] = "128.100.13.";
+	char* temp2 = strcat(temp1,argc[1]);
+	int err = inet_pton(AF_INET, temp2, &server_add);
 	if(err == 0){
 		printf("Source does not contain a character string representing a valid network address in the specified address family.\n");
 		return 0;
@@ -67,8 +69,8 @@ int main(int arg, char** argc){
 	char message[1000];
 	socklen_t sender_size = 0;
 	int rd = recvfrom(sd, message, 1000, 0, (struct sockaddr*)&server_info, &sender_size);
-	
-	if(rd && strcmp("Yes", message) == 0)
+	message[rd] = '\0';	
+	if(rd && (strcmp("Yes", message) == 0))
 		printf("A file transfer can start.");
 	else
 		printf("Did not receive (a yes).");	
