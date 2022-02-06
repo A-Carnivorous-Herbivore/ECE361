@@ -85,7 +85,7 @@ int main(int arg, char** argc){
 		printf("Did not receive (a yes).\n");
 	
 	
-	//allocate the number of packets neccesary
+	//allocate the number of packets neccesary, packets are always size 1000
 	struct stat st;
 	stat(file_name, &st);
 	int size = st.st_size;
@@ -116,13 +116,14 @@ int main(int arg, char** argc){
 		sprintf(string, "%d:%d:%d:%s:", pac -> total_frag, pac -> frag_no, pac -> size, pac -> filename);
 		//use memcpy for the real binary data
 		memcpy(strlen(string) + string, pac -> filedata, pac -> size);
-
+		
+		//server receives data in string form which it must "deserialize"
 		sendto(sd, pac, 1250, 0, (struct sockaddr*)&server, sizeof(server));
 		printf("Packet %d/%d sent ... ", i+1, noPackets);
 		
 		char ack[50];
 		int rd = recvfrom(sd, ack, 50, 0, (struct sockaddr*)&server_info, &server_size);
-		//must recieve an "ack" before proceeding	
+		//must recieve an "ack" from server before proceeding to next packet	
 		if(!(rd > 0 && strcmp(ack, "ack") == 0)){
 			i--;
 			printf("Retransmitting.\n ");
