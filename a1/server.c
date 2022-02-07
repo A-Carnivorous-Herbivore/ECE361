@@ -141,4 +141,37 @@ int main(int arg, char** argc){
 			
 	}
 	return 0;
+
+	/*FILE *f;
+
+	int status = 1;
+	char *response = "ACK"; 
+
+	while(status){
+		//recieving packets
+	}
+
+	//writing to file
+	if(frag_no==1){
+		f = fopen(filename, "w");
+	}
+	fwrite(filedata, 1, size, f);
+
+	if(frag_no!=total_frag){
+        	if ((numbytes = sendto(socketfd, response, strlen(response), 0, (const struct sockaddr *) their_addr, addr_len)) == -1){
+			perror("server: sendto");
+                	exit(1);
+		}
+	
+	}
+	if(frag_no!=total_frag){    
+		flag = 0;  
+	}
+
+	fclose(f);
+	freeaddrinfo(serverinfo); 
+	close(socketfd);
+	return 0;
+	}
+	*/
 }
