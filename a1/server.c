@@ -11,9 +11,45 @@
 #include <arpa/inet.h>
 #include <sys/wait.h>
 #include <signal.h>
-
+struct packet{
+	unsigned int total_frag;
+	unsigned int frag_no;
+	unsigned int size;
+	char* filename;
+	char filedata[1000];
+};
 char* serverIP = "128.100.13.241";
-
+void decodePacket(char* buffer, struct packet* result){
+	int objectNumber = 0;
+	int startFrom = 0;
+	int sectionSize = 0;
+	//while(1){
+	for(int i = 0;;i++){
+		char temp[1000];		//Max number at 1000
+		if(buffer[i] == ':'){		//Found division, [startFrom, i]
+			strncpy(temp, buffer+startFrom, sectionSize);
+			temp[sectionSize] = '\0';		//In case of corruption
+			sectionSize = 0;			//Reset section size
+			startFrom = startFrom + sectionSize + 1;	//Skip the :
+			objectNumber++;				//Update number of found items
+			if(objectNumber == 1){
+				result->total_frag = atoi(temp);
+			}else if(objectNumber == 2){
+				result->frag_no = atoi(temp);
+			}else if(objectNumber == 3){
+				result->size = atoi(temp);
+			}else if(objectNumber == 4){
+				result->filename= (char*)malloc(sizeof(char)*(strlen(temp)+1));
+				strncpy(result->filedata, buffer + startFrom, sizeof(char) * result->size);
+				(result->filedata)[result->size] = '\0';
+				return ;
+			}
+		}else{
+			sectionSize++;
+			
+		}
+	}
+}
 //Some of the following functions have taken ideas from Beej's Guide
 int main(int arg, char** argc){
 	if(arg != 2){
@@ -86,5 +122,23 @@ int main(int arg, char** argc){
 		exit(1);
 	}
 	//printf("listener:got packet from %s\n", inet_ntop(their_addr.ss_family, get_in_addr((struct sockaddr*)&their_addr), s, sizeof s));
+	char recvBuffer[2000];
+	int packetReceived = 0;
+	struct packet* result = (struct packet*)malloc(sizeof(struct packet));
+	while( packetReceived == 0 || result->frag_no != result->total_frag){
+		char msg[10];
+		if(recvfrom(sockfd, recvBuffer, 1999, 0, (struct sockaddr*)&their_addr, &addr_len) == -1){
+			strcpy(msg,"BAD");
+			msg[3] = '\0';
+			numbytes = sendto(sockfd, msg,strlen(msg),0, (const struct sockaddr*) &their_addr, addr_len);
+			perror("BADBAD");
+			exit(1);
+		}
+		decodePacket(recvBuffer,result);
+		strcpy(msg, "BAD");
+		msg[3] = '\0';
+		numbytes = sendto(sockfd, msg, strlen(msg), 0, (const struct sockaddr*)&their_addr, addr_len);		//Send ACK to msg, needs to create and write to file. Every packet is stored in result.
+			
+	}
 	return 0;
 }
