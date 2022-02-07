@@ -121,11 +121,16 @@ int main(int arg, char** argc){
 		perror("send error");
 		exit(1);
 	}
+
+	//receive a first packet to obtain the path and open the file here
+
 	//printf("listener:got packet from %s\n", inet_ntop(their_addr.ss_family, get_in_addr((struct sockaddr*)&their_addr), s, sizeof s));
 	char recvBuffer[2000];
 	int packetReceived = 0;
 	struct packet* result = (struct packet*)malloc(sizeof(struct packet));
 	while( packetReceived == 0 || result->frag_no != result->total_frag){
+
+
 		char msg[10];
 		if(recvfrom(sockfd, recvBuffer, 1999, 0, (struct sockaddr*)&their_addr, &addr_len) == -1){
 			strcpy(msg,"BAD");
@@ -136,9 +141,12 @@ int main(int arg, char** argc){
 		}
 		decodePacket(recvBuffer,result);
 		strcpy(msg, "BAD");
+		//send back "ack" isntead of bad"
 		msg[3] = '\0';
 		numbytes = sendto(sockfd, msg, strlen(msg), 0, (const struct sockaddr*)&their_addr, addr_len);		//Send ACK to msg, needs to create and write to file. Every packet is stored in result.
-			
+
+
+		//insert eric's code to write msg directly to the file here			
 	}
 	return 0;
 
