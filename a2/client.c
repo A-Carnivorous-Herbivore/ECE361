@@ -72,10 +72,12 @@ int main(int arg, char** argc){
 		printf("File %s doesn't exist.\n", file_name);	 
 		return 0;
 	}
+	clock_t start, end;
 	//time_t t1, t2;
 	//time(&t1);
 	//struct timeval start,stop;
 	//gettingtimeofday(&start,NULL);
+	start = clock();
 	sendto(sd, "ftp", 3, 0, (struct sockaddr*)&server, sizeof(server));
 
 	
@@ -84,12 +86,13 @@ int main(int arg, char** argc){
 	char message[1000];
 	socklen_t server_size = 0;
 	int rd = recvfrom(sd, message, 1000, 0, (struct sockaddr*)&server_info, &server_size);
+	end = clock();
 	//gettingtimeofday(&stop,NULL);
 	double secs = 0;
 	//double secs =(double)(stop.tv_usec - start.tv_usec)/1000000 + (double)(stop.tv_sec - start.tv_sec);
 	message[rd] = '\0';	
 	if(rd && (strcmp("Yes", message) == 0))
-		printf("RTT is %f.\n", secs);
+		printf("RTT is %f.\n", (double)(end-start)/CLOCKS_PER_SEC);
 	else
 		printf("Did not receive (a yes).\n");
 	//printf("rtt = %f", t2-t1);
@@ -100,7 +103,12 @@ int main(int arg, char** argc){
 	int size = st.st_size;
 	int noPackets = size/1000 + 1;
 	struct packet** packets = (struct packet**)malloc(noPackets*sizeof(struct packet*));
-	
+	struct timeval timer;
+	timer.tv_sec = 2;
+	timer.tv_usec = 0;
+	if(setsockopt(sd, SOL_SOCKET, SO_RCVTIMEO, &timer, sizeof(timer)) < 0 ){
+		perror("Socket timer cannot be set");
+	}	
 	//generate the packet contents based on the file
 	int f = open(file_name, O_RDONLY);
 	for(int i = 1; i <= noPackets; i++){
@@ -127,17 +135,40 @@ int main(int arg, char** argc){
 		memcpy(strlen(string) + string, pac -> filedata, pac -> size);
 		printf("%s", string);
 		//server receives data in string form which it must "deserialize"
+		start = clock();
 		sendto(sd, string, 1250, 0, (struct sockaddr*)&server, sizeof(server));
 		printf("Packet %d/%d sent ... ", i+1, noPackets);
 		
 		char ack[50];
 		int rd = recvfrom(sd, ack, 50, 0, (struct sockaddr*)&server_info, &server_size);
+		end = clock();
 		//must recieve an "ack" from server before proceeding to next packet	
-		if(!(rd > 0 && strcmp(ack, "ack") == 0)){
+		/*if(!rd){
+			if(errno == EOULDBLOCK || errno == EAGAIN){
+				i--;
+				continue;
+			}else{
+				perror("Recvfrom has error");
+				eixt(1);
+			}
+		}*/
+		if(rd == -1 || strcmp(ack, "ack") == 0){
 			i--;
 			printf("Retransmitting.\n ");
-		}else
+			timer.tv_sec++;
+			setsockopt(sd, SOL_SOCKET, SO_RCVTIMEO, &timer, sizeof(timer) < 0 );
+		}else{
 			printf("Received.\n ") ;
+			double timeDuration =(double)(end-start)/CLOCKS_PER_SEC;
+			int orgSec = timer.tv_sec, orgUsec = timer.tv_usec;
+			double orgTotal = orgSec + orgUsec/1000000.0;
+			double updateTime = orgSec*0.85+0.15*timeDuration;
+			timer.tv_sec = (int)updateTime;
+			timer.tv_usec = 1000*(updateTime - (int)updateTime);
+			//timer.tv_sec = 0.85*timer.tv_sec + 0.15*((int)timeDuration);
+			//timer.tv_usec =  0.85*timer.tv_usec + 0.15*1000*(timeDuration - (int)timeDuration);
+			setsockopt(sd, SOL_SOCKET, SO_RCVTIMEO, &timer, sizeof(timer) < 0 );
+		}
 
 	}
 	return 0;

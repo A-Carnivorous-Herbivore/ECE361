@@ -146,13 +146,29 @@ int main(int arg, char** argc){
 			exit(1);
 		}
 		printf("%s", recvBuffer);
-		frag_no++;
 		decodePacket(recvBuffer,result);
 		//stringToPacket(recvBuffer,  new_buff, result);
 		strcpy(msg, "ack");
 		msg[3] = '\0';
-		numbytes = sendto(sockfd, msg, strlen(msg), 0, (const struct sockaddr*)&their_addr, addr_len);		//Send ACK to msg, needs to create and write to file. Every packet is stored in result.
-		if(frag_no == 1){
+		if((double)rand()/(double)RAND_MAX > 0.2){
+			numbytes = sendto(sockfd, msg, strlen(msg), 0, (const struct sockaddr*)&their_addr, addr_len);
+			frag_no++;
+			if(frag_no == 1){
+				char* name = malloc(sizeof(char)*strlen(result->filename)+10);
+				strcpy(name, result->filename);
+				strcat(name,"-copy");
+				f = fopen(name, "wb");			
+			}
+			fwrite(result->filedata, sizeof(char) ,result->size, f);
+			if(frag_no == result->total_frag){
+				break;
+			}
+
+		}else{
+			
+		}
+				//Send ACK to msg, needs to create and write to file. Every packet is stored in result.
+		/*if(frag_no == 1){
 			char* name = malloc(sizeof(char)*strlen(result->filename)+10);
 			strcpy(name, result->filename);
 			strcat(name,"-copy");
@@ -161,7 +177,7 @@ int main(int arg, char** argc){
 		fwrite(result->filedata, sizeof(char) ,result->size, f);
 		if(frag_no == result->total_frag){
 			break;
-		}
+		}*/
 	}
 	return 0;
 
