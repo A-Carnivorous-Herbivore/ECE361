@@ -341,6 +341,8 @@ int main(int argc, char **argv)
                                     for(j = 0; j < 3 && j != id; j++){
                                         //if another member is also in this session
                                         if(ptr->members[j] == 1){
+                                            response.size = sizeof(response.data);
+                                            //buf = serialize_message(response);
                                             if (send(id_to_fd_mapping[j], buf, nbytes, 0) == -1)
                                                 perror("send");
                                         }
