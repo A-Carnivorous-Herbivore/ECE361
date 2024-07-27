@@ -1,2 +1,1 @@
-# ECE361
-## 2022 Winter Term
+This repo is to create group chat channel in terminal using socket programming. The work includes features such as authentication, admin control, private message, etc...
